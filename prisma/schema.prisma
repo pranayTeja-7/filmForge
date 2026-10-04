@@ -36,11 +36,68 @@ model Profile {
   userId      String   @unique @map("user_id")
   displayName String   @map("display_name")
   bio         String?
+  location    String?
   experience  String?
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])
+  profileRoles   ProfileRole[]
+  portfolioItems PortfolioItem[]
 
   @@map("profiles")
 }
+
+model Role {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  profileRoles ProfileRole[]
+
+  @@map("roles")
+}
+
+model ProfileRole {
+  id        String   @id @default(uuid())
+  profileId String   @map("profile_id")
+  roleId    String   @map("role_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  role    Role    @relation(fields: [roleId], references: [id])
+
+  @@unique([profileId, roleId])
+  @@map("profile_roles")
+}
+
+enum PortfolioItemType {
+  SHORT_FILM
+  FEATURE_FILM
+  DOCUMENTARY
+  MUSIC_VIDEO
+  COMMERCIAL
+  WEB_SERIES
+  SHORT_VIDEO
+  PHOTOGRAPHY
+  SHOWREEL
+  OTHER
+}
+
+model PortfolioItem {
+  id          String            @id @default(uuid())
+  profileId   String            @map("profile_id")
+  title       String
+  description String?
+  type        PortfolioItemType
+  customType  String?           @map("custom_type")
+  externalUrl String?           @map("external_url")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("portfolio_items")
+}
+
