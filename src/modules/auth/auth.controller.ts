@@ -13,10 +13,15 @@ export class AuthController {
     
     login = async (req:Request, res:Response) => {
         const {email, password} = req.body;
-        const token = await this.authService.login(email, password)
-        res.cookie("token", token, {
+        const {accessToken, refreshToken} = await this.authService.login(email, password)
+        res.cookie("accessToken", accessToken, {
             httpOnly: true,
             expires: new Date(Date.now() + 15*60*1000)
+        })
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            expires: new Date(Date.now() + 30*24*60*60*1000),
         })
         res.status(200).json({
             message: "login successful"

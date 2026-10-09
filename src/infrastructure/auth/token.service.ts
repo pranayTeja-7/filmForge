@@ -1,5 +1,5 @@
 import  Jwt  from "jsonwebtoken"
-
+import crypto from "node:crypto"
 
 export class TokenService {
     generateAccessToken(userId:string){
@@ -17,5 +17,9 @@ export class TokenService {
 
     verifyAccessToken(token: string){
         return Jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
+    }
+
+    generateRefreshToken(){
+        return crypto.randomBytes(64).toString("hex");
     }
 }

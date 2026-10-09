@@ -71,7 +71,21 @@ export class AuthService {
             )
         };
 
-        const token = this.tokenService.generateAccessToken(user.id);
-        return token;
+        const accessToken = this.tokenService.generateAccessToken(user.id);
+        const refreshToken = this.tokenService.generateRefreshToken();
+        
+        const refreshTokenHash = await argon2.hash(refreshToken);
+
+        await this.prisma.refreshToken.create({
+            data: {
+                userId: user.id,
+                tokenHash: refreshTokenHash,
+                expiresAt: new Date(Date.now() + 30*24*60*60*1000)
+            }
+        });
+        return {
+            accessToken,
+            refreshToken,
+        }
     }
 }
