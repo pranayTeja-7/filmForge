@@ -5,6 +5,7 @@ import { AuthService } from "./auth.service.js";
 import { validationMiddleware } from "../../middleware/validation.middleware.js";
 import { signupSchema, loginSchema } from "./auth.validation.js";
 import { TokenService } from "../../infrastructure/auth/token.service.js";
+import authMiddleware from "../../middleware/auth.middleware.js";
 
 const authRouter = Router();
 const tokenService = new TokenService()
@@ -13,6 +14,9 @@ const authController = new AuthController(authService);
 
 authRouter.post("/signup", validationMiddleware(signupSchema), authController.signup);
 authRouter.post("/login", validationMiddleware(loginSchema), authController.login);
+authRouter.get("/me", authMiddleware, authController.me)
+authRouter.post("/refresh-token", authController.refreshToken)
+authRouter.post("/logout", authController.logout)
 
 
 export default authRouter;

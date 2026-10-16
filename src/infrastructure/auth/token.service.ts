@@ -1,5 +1,6 @@
 import  Jwt  from "jsonwebtoken"
 import crypto from "node:crypto"
+import { AppError } from "../../errors/app.error.js";
 
 export class TokenService {
     generateAccessToken(userId:string){
@@ -16,7 +17,16 @@ export class TokenService {
     }
 
     verifyAccessToken(token: string){
-        return Jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
+        try {
+           return Jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
+        } catch (error) {
+            console.log(error);
+            throw new AppError(
+                401,
+                "INVALID_TOKEN",
+                "Invalid Token, please login"
+            )
+        }
     }
 
     generateRefreshToken(){
