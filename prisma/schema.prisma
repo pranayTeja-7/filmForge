@@ -45,15 +45,22 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
+enum OnboardingStatus {
+  ROLES
+  PORTFOLIO
+  COMPLETED
+}
+
 model Profile {
-  id          String   @id @default(uuid())
-  userId      String   @unique @map("user_id")
-  displayName String   @map("display_name")
-  bio         String?
-  location    String?
-  experience  String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id               String           @id @default(uuid())
+  userId           String           @unique @map("user_id")
+  displayName      String           @map("display_name") @db.VarChar(100)
+  bio              String?          @db.VarChar(500)
+  location         String?          @db.VarChar(100)
+  experience       String?          @db.VarChar(500)
+  onboardingStatus OnboardingStatus @map("onboarding_status")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
 
   user           User            @relation(fields: [userId], references: [id])
   profileRoles   ProfileRole[]

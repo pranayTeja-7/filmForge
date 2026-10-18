@@ -2,7 +2,7 @@ import { PrismaService } from "../../infrastructure/prisma/prisma.service.js";
 import { AppError } from "../../errors/app.error.js";
 import argon2 from "argon2";
 import { TokenService } from "../../infrastructure/auth/token.service.js";
-import type { NextFunction } from "express";
+import { Prisma } from "../../generated/prisma/client.js";
 
 export class AuthService {
     constructor(
@@ -38,41 +38,57 @@ export class AuthService {
         const refreshToken = this.tokenService.generateRefreshToken();
         const refreshTokenHash = await argon2.hash(refreshToken);
 
-        const result = await this.prisma.$transaction(async (tx) => {
-            const user = await tx.user.create({
-                data: {
-                    email: email,
-                    passwordHash: passwordHash,
-                },
-                omit: {
-                    passwordHash: true,
-                    updatedAt: true
-                }
-            }) 
 
 
-            const refreshTokenData = await tx.refreshToken.create({
-                data: {
-                    userId: user.id,
-                    tokenHash : refreshTokenHash,
-                    expiresAt: new Date(Date.now() + 30*24*60*60*1000)
-                }
+        try {
+            const result = await this.prisma.$transaction(async (tx) => {
+                const user = await tx.user.create({
+                    data: {
+                        email: email,
+                        passwordHash: passwordHash,
+                    },
+                    omit: {
+                        passwordHash: true,
+                        updatedAt: true
+                    }
+                }) 
+
+                const accessToken = this.tokenService.generateAccessToken(user.id);
+
+
+                const refreshTokenData = await tx.refreshToken.create({
+                    data: {
+                        userId: user.id,
+                        tokenHash : refreshTokenHash,
+                        expiresAt: new Date(Date.now() + 30*24*60*60*1000)
+                    }
+                })
+
+                return {user, refreshTokenData, accessToken};
+                
             })
 
-            return {user, refreshTokenData};
-            
-        })
+            const {user, refreshTokenData, accessToken} = result
+
+            const refreshTokenCookie = `${refreshTokenData.id}.${refreshToken}`
+            return {
+                user,
+                refreshTokenCookie,
+                accessToken
+            }
+        } catch (error) {
+            if(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002"){
+                throw new AppError(
+                    409,
+                    "EMAIL_ALREADY_EXISTS",
+                    "An account with this email already exists"
+                );
+            }
+
+            throw error;
+        }
         
-        const {user, refreshTokenData} = result
-
-        const accessToken = this.tokenService.generateAccessToken(user.id);
-
-        const refreshTokenCookie = `${refreshTokenData.id}.${refreshToken}`
-        return {
-            user,
-            refreshTokenCookie,
-            accessToken
-        }     
+             
     }
 
     
@@ -121,6 +137,20 @@ export class AuthService {
         }
     }
 
+
+    async me(userId:string){
+        const userData = await this.prisma.profile.findUnique({
+            where: {
+                userId : userId,
+            },
+            select: {
+                userId: true,
+                displayName: true,
+            }
+        })
+
+        return userData;
+    }
     
     async refreshToken(refreshTokenCookie:string) {
         const refreshTokenParts = refreshTokenCookie.split(".");

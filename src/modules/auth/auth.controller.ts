@@ -50,9 +50,12 @@ export class AuthController {
                 "Authentication required. Please login"
             )
         }
+
+        const userData = await this.authService.me(userId);
+
         res.status(200).json({
             message: "userId fetched successfully",
-            userId,
+            userData
         })
     }
 
@@ -102,7 +105,7 @@ export class AuthController {
         res.clearCookie("refreshToken");
 
         res.status(200).json({
-            message: "Logout succesfully"
+            message: "Logout succesfull"
         })
     }
 }
