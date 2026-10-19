@@ -14,7 +14,8 @@ const roles = [
     "Actor",
     "Producer",
     "Composer",
-    "Sound Designer"
+    "Sound Designer",
+    "Writer"
 ]
 
 const main = async () => {

@@ -11,5 +11,14 @@ export const profileSchema = z.object({
     location: z.string().trim().max(100, {error: "Location name must contain at most 100 characters"}).optional(),
 })
 
+export type ProfileType = z.infer<typeof profileSchema>
 
-export type profileType = z.infer<typeof profileSchema>
+export const rolesSchema = z.object({
+    roleIds: z.array(z.uuid()).min(1).refine((array) => {
+        return new Set(array).size === array.length
+    },{
+        error: "All roleIds must be unique"
+    })
+})
+
+export type RolesType = z.infer<typeof rolesSchema>

@@ -21,4 +21,24 @@ export class ProfileController {
             profile
         })
     }
+
+    createRoles = async (req:Request, res:Response, next:NextFunction) => {
+        const userId = req.user?.id;
+        if(!userId){
+            throw new AppError(
+                401,
+                "UNAUTHENTICATED",
+                "Authentication required. Please login"
+            )
+        }
+        const reqBody = req.body;
+        const {profileRoles, OnboardingStatus} = await this.profileService.createRoles(userId, reqBody);
+
+        res.status(201).json({
+            message: "Roles created successfully",
+            profileRoles,
+            OnboardingStatus,
+        })
+        
+    }
 }
