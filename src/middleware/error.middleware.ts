@@ -3,6 +3,7 @@ import type { ErrorRequestHandler } from "express";
 
 export const errorMiddleware:ErrorRequestHandler = (err, req, res, next) => {
     if(err instanceof AppError){
+        console.log(err)
         return res.status(err.statusCode).json({
             message: err.message,
             code: err.code,

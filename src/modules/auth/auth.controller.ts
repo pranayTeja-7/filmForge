@@ -69,10 +69,9 @@ export class AuthController {
         }
 
         const oldRefreshTokenCookie = req.cookies.refreshToken;
-        const oldAccessToken = req.cookies.accessToken;
 
 
-        if(!oldRefreshTokenCookie || !oldAccessToken){
+        if(!oldRefreshTokenCookie){
             throw new AppError(
                 401,
                 "TOKEN NOT FOUND",
