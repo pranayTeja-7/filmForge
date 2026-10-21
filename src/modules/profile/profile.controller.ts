@@ -32,12 +32,12 @@ export class ProfileController {
             )
         }
         const reqBody = req.body;
-        const {profileRoles, OnboardingStatus} = await this.profileService.createRoles(userId, reqBody);
+        const {profileRoles, onboardingStatus} = await this.profileService.createRoles(userId, reqBody);
 
         res.status(201).json({
             message: "Roles created successfully",
             profileRoles,
-            OnboardingStatus,
+            onboardingStatus,
         })
         
     }

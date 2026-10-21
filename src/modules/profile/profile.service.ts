@@ -87,8 +87,8 @@ export class ProfileService {
                 if(updatedData.length === 0){
                     throw new AppError(
                         409,
-                        "ROLES_ALDREADY_EXIST",
-                        "Profile roles for this profile aldready exist"
+                        "ROLES_ALREADY_EXIST",
+                        "Profile roles for this profile already exist"
                     )
                 }
 
@@ -110,8 +110,8 @@ export class ProfileService {
             if(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002"){
                 throw new AppError(
                     409,
-                    "ROLES_ALDREADY_EXIST",
-                    "Profile roles for this profile aldready exist"
+                    "ROLES_ALREADY_EXIST",
+                    "Profile roles for this profile already exist"
                 )
             }
             throw error

@@ -14,7 +14,7 @@ export const profileSchema = z.object({
 export type ProfileType = z.infer<typeof profileSchema>
 
 export const rolesSchema = z.object({
-    roleIds: z.array(z.uuid()).min(1).refine((array) => {
+    roleIds: z.array(z.uuid()).min(1, {error: "Atleast one role is required"}).refine((array) => {
         return new Set(array).size === array.length
     },{
         error: "All roleIds must be unique"
