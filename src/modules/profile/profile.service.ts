@@ -2,6 +2,7 @@ import { PrismaService } from "../../infrastructure/prisma/prisma.service.js";
 import type { ProfileType,RolesType } from "./profile.validation.js";
 import { Prisma } from "../../generated/prisma/client.js";
 import { AppError } from "../../errors/app.error.js";
+import type { PortfolioItemSchemaType } from "./profile.validation.js";
 
 
 export class ProfileService {
@@ -115,6 +116,133 @@ export class ProfileService {
                 )
             }
             throw error
+        }
+    }
+
+    async getPortfolioItems(userId:string){
+        const profile = await this.prisma.profile.findUnique({
+            where : {
+                userId: userId       
+            },
+            select: {
+                id: true
+            }
+        })
+
+        if(!profile){
+            throw new AppError(
+                404,
+                "PROFILE_NOT_FOUND",
+                "Profile not found. Please complete the about you step first"
+            )
+        }
+
+        const portfolioItems = await this.prisma.portfolioItem.findMany({
+            where: {
+                profileId: profile.id
+            }
+        })
+
+        return portfolioItems;
+    }
+
+
+    async createPortfolioItem(userId:string, reqBody:PortfolioItemSchemaType){
+        
+        const profile = await this.prisma.profile.findUnique({
+            where: {
+                userId,
+            },
+            select: {
+                id: true,
+                onboardingStatus: true
+            }
+        });
+
+        if(!profile){
+            throw new AppError(
+                404,
+                "PROFILE_NOT_FOUND",
+                "Profile not found. Please complete the about you step first"
+            )
+        };
+
+        if(profile.onboardingStatus === "ROLES"){
+            throw new AppError(
+                409,
+                "INVALID_ONBOARDING_STATUS",
+                "Please complete the roles step before managing portfolio"
+            )
+        }
+
+        const existingPortfolioItemsCount = await this.prisma.portfolioItem.count({
+            where: {
+                profileId: profile.id
+            }
+        })
+
+        if (existingPortfolioItemsCount >= 10){
+            throw new AppError(
+                400,
+                "MAXIMUM_PORTFOLIO_ITEMS_LIMIT_REACHED",
+                "Maximum portfolio items limit has reached."
+            )
+        }
+
+        const portfoilioItem = await this.prisma.portfolioItem.create({
+            data: {
+                profileId: profile.id,
+                title: reqBody.title,
+                type: reqBody.type,
+                customType: reqBody.customType ?? null,
+                description: reqBody.description ?? null,
+                externalUrl: reqBody.externalUrl ?? null,
+            }
+        })
+
+        return portfoilioItem;
+    }
+
+    async updatePortfolioItem (userId:string, itemId:string, reqBody:PortfolioItemSchemaType){
+        const profile = await this.prisma.profile.findUnique({
+            where: {
+                userId,
+            }
+        })
+
+        if(!profile){
+            throw new AppError(
+                404,
+                "PROFILE_NOT_FOUND",
+                "Profile not found. Please complete the about you step first"
+            )
+        };
+
+        try {
+            const updatedPortfolioItem = await this.prisma.portfolioItem.update({
+                where: {
+                    id: itemId,
+                    profileId: profile.id
+                },
+                data: {
+                    title: reqBody.title,
+                    type: reqBody.type,
+                    customType: reqBody.customType ?? null,
+                    description: reqBody.description ?? null,
+                    externalUrl: reqBody.externalUrl ?? null,
+                }
+            })
+
+            return updatedPortfolioItem
+        } catch (error) {
+            if(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025"){
+                throw new AppError(
+                    404,
+                    "PORTFOLIO_ITEM_NOT_FOUND",
+                    "Portfolio item not found"
+                )
+            }
+            throw error;
         }
     }
 }

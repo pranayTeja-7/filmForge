@@ -12,8 +12,8 @@ const tokenService = new TokenService()
 const authService = new AuthService(prisma, tokenService);
 const authController = new AuthController(authService);
 
-authRouter.post("/signup", validationMiddleware(signupSchema), authController.signup);
-authRouter.post("/login", validationMiddleware(loginSchema), authController.login);
+authRouter.post("/signup", validationMiddleware(signupSchema, "body"), authController.signup);
+authRouter.post("/login", validationMiddleware(loginSchema, "body"), authController.login);
 authRouter.get("/me", authMiddleware, authController.me)
 authRouter.post("/refresh-token", authController.refreshToken)
 authRouter.post("/logout", authController.logout)

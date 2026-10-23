@@ -41,4 +41,59 @@ export class ProfileController {
         })
         
     }
+
+    getPortfolioItems = async (req:Request, res:Response, next:NextFunction) => {
+        const userId = req.user?.id;
+        if(!userId){
+            throw new AppError(
+                401,
+                "UNAUTHENTICATED",
+                "Authentication required. Please login"
+            )
+        }
+        const portfolioItems = await this.profileService.getPortfolioItems(userId)
+
+        res.status(200).json({
+            message: "Portfolio items fetched successfully",
+            portfolioItems,
+        })
+    }
+
+    createPortfolioItem = async (req:Request, res:Response, next:NextFunction) => {
+        const userId = req.user?.id;
+        if(!userId){
+            throw new AppError(
+                401,
+                "UNAUTHENTICATED",
+                "Authentication required. Please login"
+            )
+        }
+        const reqBody = req.body;
+
+        const portfolioItem = await this.profileService.createPortfolioItem(userId, reqBody);
+
+        res.status(201).json({
+            message: "Portfolio item saved successfully",
+            portfolioItem,
+        })
+    }
+
+
+    updatePortfolioItem = async (req:Request<{id:string}>, res:Response, next:NextFunction) => {
+        const userId = req.user?.id;
+        if(!userId){
+            throw new AppError(
+                401,
+                "UNAUTHENTICATED",
+                "Authentication required. Please login"
+            )
+        }
+
+        const itemId = req.params.id
+        
+        const reqBody = req.body
+
+        const updatedPortfolioItem = await this.profileService.updatePortfolioItem(userId, itemId, reqBody)
+
+    }
 }

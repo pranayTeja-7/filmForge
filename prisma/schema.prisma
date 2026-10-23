@@ -109,11 +109,11 @@ enum PortfolioItemType {
 model PortfolioItem {
   id          String            @id @default(uuid())
   profileId   String            @map("profile_id")
-  title       String
-  description String?
+  title       String            @db.VarChar(150)
+  description String?           @db.VarChar(1000)
   type        PortfolioItemType
-  customType  String?           @map("custom_type")
-  externalUrl String?           @map("external_url")
+  customType  String?           @map("custom_type") @db.VarChar(100)
+  externalUrl String?           @map("external_url") @db.VarChar(2048)
   createdAt   DateTime          @default(now()) @map("created_at")
   updatedAt   DateTime          @updatedAt @map("updated_at")
 
