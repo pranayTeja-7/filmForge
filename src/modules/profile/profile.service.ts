@@ -125,7 +125,8 @@ export class ProfileService {
                 userId: userId       
             },
             select: {
-                id: true
+                id: true,
+                onboardingStatus: true,
             }
         })
 
@@ -137,6 +138,13 @@ export class ProfileService {
             )
         }
 
+        if(profile.onboardingStatus === "ROLES"){
+            throw new AppError(
+                403,
+                "ROLES_REQUIRED",
+                "Profile roles not found. Please complete the roles step before accessing or managing portfolio"
+            )
+        }
         const portfolioItems = await this.prisma.portfolioItem.findMany({
             where: {
                 profileId: profile.id
@@ -183,13 +191,13 @@ export class ProfileService {
 
         if (existingPortfolioItemsCount >= 10){
             throw new AppError(
-                400,
+                409,
                 "MAXIMUM_PORTFOLIO_ITEMS_LIMIT_REACHED",
-                "Maximum portfolio items limit has reached."
+                "Maximum portfolio items limit has been reached."
             )
         }
 
-        const portfoilioItem = await this.prisma.portfolioItem.create({
+        const portfolioItem = await this.prisma.portfolioItem.create({
             data: {
                 profileId: profile.id,
                 title: reqBody.title,
@@ -197,10 +205,15 @@ export class ProfileService {
                 customType: reqBody.customType ?? null,
                 description: reqBody.description ?? null,
                 externalUrl: reqBody.externalUrl ?? null,
+            },
+            omit: {
+                updatedAt: true,
+                createdAt: true,
+                profileId: true,
             }
         })
 
-        return portfoilioItem;
+        return portfolioItem;
     }
 
     async updatePortfolioItem (userId:string, itemId:string, reqBody:PortfolioItemSchemaType){
@@ -244,5 +257,93 @@ export class ProfileService {
             }
             throw error;
         }
+    }
+
+    
+    async deletePortfolioItem (userId:string, itemId:string) {
+        const profile = await this.prisma.profile.findUnique({
+            where: {
+                userId,
+            }
+        })
+
+        if(!profile){
+            throw new AppError(
+                404,
+                "PROFILE_NOT_FOUND",
+                "Profile not found. Please complete the about you step first"
+            )
+        }
+
+        try {
+            await this.prisma.portfolioItem.delete({
+                where: {
+                    id: itemId,
+                    profileId: profile.id
+                }
+            })
+
+        } catch (error) {
+            if(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025"){
+                throw new AppError(
+                    404,
+                    "PORTFOLIO_ITEM_NOT_FOUND",
+                    "Portfolio item not found"
+                )
+            };
+
+            throw error;
+        }
+    }
+
+    async completeProfile(userId:string){
+        const profile = await this.prisma.profile.findUnique({
+            where: {
+                userId: userId,
+            }
+        })
+
+        if(!profile){
+            throw new AppError(
+                404,
+                "PROFILE_NOT_FOUND",
+                "Profile not found. Please complete the about you step first"
+            )
+        }
+
+        if(profile.onboardingStatus === "COMPLETED"){
+            return;
+        }
+
+        if(profile.onboardingStatus === "ROLES"){
+            throw new AppError(
+                409,
+                "INVALID_ONBOARDING_STATUS",
+                "Please complete the roles step."
+            )
+        }
+
+        const profilerole = await this.prisma.profileRole.findFirst({
+            where: {
+                profileId: profile.id
+            }
+        })
+
+        if(!profilerole){
+            throw new AppError(
+                409,
+                "ROLES_REQUIRED",
+                "Please complete the roles step."
+            )
+        }
+
+        await this.prisma.profile.update({
+            where: {
+                id: profile.id,
+            },
+            data: {
+                onboardingStatus: "COMPLETED"
+            }
+        })
     }
 }

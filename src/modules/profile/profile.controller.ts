@@ -94,6 +94,47 @@ export class ProfileController {
         const reqBody = req.body
 
         const updatedPortfolioItem = await this.profileService.updatePortfolioItem(userId, itemId, reqBody)
-
+        
+        res.status(200).json({
+            message: "Portfolio item updated successfully",
+            updatedPortfolioItem,
+        })
     }
+
+    deletePortfolioItem = async (req:Request<{id:string}>, res:Response, next:NextFunction) => {
+        const userId = req.user?.id;
+        if(!userId){
+            throw new AppError(
+                401,
+                "UNAUTHENTICATED",
+                "Authentication required. Please login"
+            )
+        }
+
+        const itemId = req.params.id;
+
+        await this.profileService.deletePortfolioItem(userId, itemId)
+
+        res.status(200).json({
+            message: "Portfolio item deleted successfully"
+        })
+    }
+
+    completeProfile = async (req:Request, res:Response, next:NextFunction) => {
+        const userId = req.user?.id
+        if(!userId){
+            throw new AppError(
+                401,
+                "UNAUTHENTICATED",
+                "Authentication required. Please login"
+            )
+        }
+
+        await this.profileService.completeProfile(userId);
+
+        res.status(200).json({
+            message: "Profile completed successfully"
+        })
+    }
+
 }

@@ -31,4 +31,13 @@ profileRouter.put(
     profileController.updatePortfolioItem
 )
 
+profileRouter.delete(
+    "/portfolio-item/:id",
+    authMiddleware,
+    validationMiddleware(portfolioItemParamsSchema, "params"),
+    profileController.deletePortfolioItem
+)
+
+profileRouter.post("/complete-profile", authMiddleware, profileController.completeProfile)
+
 export default profileRouter
