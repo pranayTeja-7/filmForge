@@ -41,20 +41,20 @@ export class AuthController {
     }
 
     me = async (req:Request, res:Response) => {
-        const userId = req.user?.id;
+        
+        const user = req.user
 
-        if(!userId){
+        if(!user){
             throw new AppError(
                 401,
                 "UNAUTHENTICATED",
                 "Authentication required. Please login"
             )
         }
-
-        const userData = await this.authService.me(userId);
+        const userData = await this.authService.me(user);
 
         res.status(200).json({
-            message: "userId fetched successfully",
+            message: "userData fetched successfully",
             userData
         })
     }

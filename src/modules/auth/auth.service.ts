@@ -84,7 +84,7 @@ export class AuthService {
                     "An account with this email already exists"
                 );
             }
-
+            
             throw error;
         }
         
@@ -138,18 +138,23 @@ export class AuthService {
     }
 
 
-    async me(userId:string){
-        const userData = await this.prisma.profile.findUnique({
+    async me(user:{id:string, email:string}){
+        
+        const profileData = await this.prisma.profile.findUnique({
             where: {
-                userId : userId,
+                userId: user.id
             },
             select: {
-                userId: true,
-                displayName: true,
+                onboardingStatus: true,
             }
         })
 
-        return userData;
+        const data = {
+            ...user,
+            profile: profileData
+        }
+
+        return data;
     }
     
     async refreshToken(refreshTokenCookie:string) {

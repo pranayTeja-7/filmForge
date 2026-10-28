@@ -1,11 +1,11 @@
 import type { NextFunction, Request, Response } from "express"
 import { AppError } from "../errors/app.error.js"
 import { TokenService } from "../infrastructure/auth/token.service.js"
-
+import {prisma} from "../infrastructure/prisma/prisma.module.js"
 
 const tokenService = new TokenService();
 
-const authMiddleware = (req:Request, res:Response, next:NextFunction) => {
+const authMiddleware = async (req:Request, res:Response, next:NextFunction) => {
     const {accessToken} = req.cookies
 
     if(!accessToken){
@@ -34,7 +34,25 @@ const authMiddleware = (req:Request, res:Response, next:NextFunction) => {
                 "Invalid access token"
             )
         }
-        req.user = {id: sub}
+
+        const user = await prisma.user.findUnique({
+            where: {
+                id: sub,
+            },
+            select: {
+                id: true,
+                email: true,
+            }
+        })
+
+        if(!user){
+            throw new AppError(
+                401,
+                "USER_NOT_FOUND",
+                "User account no longer exists"
+            )
+        }
+        req.user = user
 
         next();
     }

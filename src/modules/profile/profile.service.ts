@@ -323,20 +323,6 @@ export class ProfileService {
             )
         }
 
-        const profilerole = await this.prisma.profileRole.findFirst({
-            where: {
-                profileId: profile.id
-            }
-        })
-
-        if(!profilerole){
-            throw new AppError(
-                409,
-                "ROLES_REQUIRED",
-                "Please complete the roles step."
-            )
-        }
-
         await this.prisma.profile.update({
             where: {
                 id: profile.id,
