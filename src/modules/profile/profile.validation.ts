@@ -56,3 +56,4 @@ export type PortfolioItemSchemaType = z.infer<typeof portfolioItemSchema>
 export const portfolioItemParamsSchema = z.object({
     id: z.uuid(),
 })
+

@@ -41,7 +41,7 @@ export class AuthController {
     }
 
     me = async (req:Request, res:Response) => {
-        
+            
         const user = req.user
 
         if(!user){
